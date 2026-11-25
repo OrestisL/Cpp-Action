@@ -119,7 +119,7 @@ for (const auto& listener : someEvent.GetInvocationList()) {
 }
 ```
 
-Unlike C#, there is no way to inspect which function or object a listener points to (C++ has no reflection).
+Unlike C#, there is no way to inspect which function or object a listener points to (there is no equivalent of `.Method` or `.Target`). C++26 adds static (compile-time) reflection, but it works on types known at compile time, and a listener is type-erased, so it doesn't change this.
 
 ### C# comparison
 
