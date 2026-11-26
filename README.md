@@ -5,6 +5,7 @@ A lightweight, header-only C++ implementation of C#'s `Action` delegate/event pa
 ## Features
 
 - **Header-only**: just drop `Action.hpp` into your project
+- **Namespaced**: everything lives in the `Events` namespace, so it won't collide with your own names
 - **C#-style API**: `AddListener`, `RemoveListener`, `Invoke`
 - **Variadic template arguments**: `Action<int, int>`, `Action<std::string>`, `Action<>`, and so on
 - **Works with free functions and lambdas**, including removing them later (see [Lambdas](#lambdas))
@@ -19,11 +20,13 @@ A lightweight, header-only C++ implementation of C#'s `Action` delegate/event pa
 
 ## Usage
 
-Copy `Action.hpp` into your project and include it:
+Copy `Action.hpp` into your project and include it. Everything is in the `Events` namespace, so write `Events::Action`, or add `using Events::Action;` in your own `.cpp` files (not in headers) to use the short name:
 
 ```cpp
 #include <iostream>
 #include "Action.hpp"
+
+using Events::Action;   // optional: lets you write Action<...> instead of Events::Action<...>
 
 void Add(int x, int y)
 {
@@ -77,7 +80,7 @@ someEvent.AddListener([](int, int) { std::cout << "can't be removed\n"; });
 You can also build the listener first and add it later, or add one listener to several actions that share the same argument types. Declare it with the `Listener` type (use `auto` only on the result of `AddListener`, not on a bare lambda):
 
 ```cpp
-Action<int, int>::Listener multiply = [](int x, int y) { /* ... */ };
+Events::Action<int, int>::Listener multiply = [](int x, int y) { /* ... */ };
 actionA.AddListener(multiply);
 actionB.AddListener(multiply);
 ```
@@ -94,7 +97,7 @@ someEvent -= Add;        // same as RemoveListener(Add)
 **Reusable lambdas:** `+=` returns the action (so it can be chained), which means it cannot return the `Listener` the way `AddListener` does. If you want to remove a lambda later, you can't use `auto x = (someEvent += lambda)`. Either use `AddListener` and keep its return value, or declare a `Listener` variable first and use it with both operators:
 
 ```cpp
-Action<int, int>::Listener divide = [](int x, int y) {
+Events::Action<int, int>::Listener divide = [](int x, int y) {
     std::cout << x / y << std::endl;
 };
 someEvent += divide;
@@ -125,13 +128,13 @@ Unlike C#, there is no way to inspect which function or object a listener points
 
 | C# | C++ (this library) |
 |---|---|
-| `Action<int, int> e;` | `Action<int, int> e;` |
-| `Action e;` | `Action<> e;` |
+| `Action<int, int> e;` | `Events::Action<int, int> e;` |
+| `Action e;` | `Events::Action<> e;` |
 | `e += Add;` | `e += Add;` (or `e.AddListener(Add);`) |
 | `e -= Add;` | `e -= Add;` (or `e.RemoveListener(Add);`) |
 | `e?.Invoke(1, 2);` | `e.Invoke(1, 2);` |
 
-The only syntax difference is that an action with no arguments is written `Action<>` in C++.
+The only syntax differences are the `Events::` prefix (which `using Events::Action;` removes) and that an action with no arguments is written `Action<>` in C++.
 
 ## API
 
@@ -154,7 +157,7 @@ cmake --build build
 
 ## Limitations
 
-- To remove a lambda, functor or `std::bind` result, keep the `Listener` returned by `AddListener` (or store it in an `Action<...>::Listener` variable and add that) and use it with `RemoveListener`. Passing a fresh inline lambda to `RemoveListener` removes nothing.
+- To remove a lambda, functor or `std::bind` result, keep the `Listener` returned by `AddListener` (or store it in an `Events::Action<...>::Listener` variable and add that) and use it with `RemoveListener`. Passing a fresh inline lambda to `RemoveListener` removes nothing.
 - `+=` cannot return the `Listener`, so removing a lambda with `-=` requires a `Listener` variable declared beforehand (see above).
 - Free functions are matched by function pointer, so `RemoveListener(Add)` works as long as the function's signature matches the action's exactly. A function with merely convertible parameters (for example `void f(long, long)` on an `Action<int, int>`) is wrapped as a callable and must be removed through a stored listener instead.
 - If a listener throws during `Invoke`, the exception propagates to the caller and the remaining listeners are not called (same as C#). Use `GetInvocationList()` to invoke listeners individually if you need per-listener error handling.

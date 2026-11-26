@@ -23,7 +23,7 @@ int main() {
                "arguments.\n";
 
   // create action
-  Action<int, int> someTestEvent;
+  Events::Action<int, int> someTestEvent;
 
   // add listeners
   someTestEvent.AddListener(Add);
@@ -61,7 +61,7 @@ int main() {
 
   // += cannot return the listener, so to remove a lambda with -= you must
   // declare a Listener variable first and use it with both operators
-  Action<int, int>::Listener divide = [](int x, int y) {
+  Events::Action<int, int>::Listener divide = [](int x, int y) {
     std::cout << "The result of dividing is: " << x / y << std::endl;
   };
   someTestEvent += divide;
